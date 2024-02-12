@@ -1,25 +1,27 @@
 const puppeteer = require('puppeteer');
-const sortTitles = require('./sortTitles');
+const sortTitles = require('./library/sortTitles');
+const autoScroll = require('./library/autoscroll');
 
 
-async function autoScroll(page){
-    await page.evaluate(async () => {
-        await new Promise((resolve, reject) => {
-            var totalHeight = 0;
-            var distance = 100; // Should be less than or equal to window.innerHeight
-            var timer = setInterval(() => {
-                var scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
 
-                if(totalHeight >= scrollHeight){
-                    clearInterval(timer);
-                    resolve();
-                }
-            }, 100);
-        });
-    });
-}
+// async function autoScroll(page){
+//     await page.evaluate(async () => {
+//         await new Promise((resolve, reject) => {
+//             var totalHeight = 0;
+//             var distance = 100; // Should be less than or equal to window.innerHeight
+//             var timer = setInterval(() => {
+//                 var scrollHeight = document.body.scrollHeight;
+//                 window.scrollBy(0, distance);
+//                 totalHeight += distance;
+
+//                 if(totalHeight >= scrollHeight){
+//                     clearInterval(timer);
+//                     resolve();
+//                 }
+//             }, 100);
+//         });
+//     });
+// }
 
 
 // ---------------------------------------------------------------------------------
@@ -45,17 +47,15 @@ async function scrapeJobListings(url) {
 
 //   console.log(jobListing)
 
-
-
-
-
 //    await page.waitForSelector('div.artdeco-global-alert-action__wrapper', { visible: true });
 //   page.screenshot({path: 'screenshot.png'})
 //   await page.click('div.artdeco-global-alert-action__wrapper > button:nth-child(2)');
 //   page.screenshot({path: 'screenshotTwo.png'})
   
 //  Extract job listings
-
+page.screenshot({path: 'screenshot.png'})
+  await autoScroll(page);
+  
 
  const jobListings = await page.evaluate(() => {
     const listings = [];
@@ -81,13 +81,14 @@ for (const listing of filteredJobListings) {
  
     await page.goto(listing.link, { waitUntil: 'networkidle0' }); // 'networkidle0': consider navigation to be finished when there are no more than 0 network connections for at least 500 ms
     
+    await autoScroll(page);
 
     await page.waitForSelector('section.core-section-container.my-3.description > div > div > section', { visible: true });
     // Now scrape the detailed information from this listing page.
     const detailedJobDescription = await page.evaluate(() => {
         
       // Extract details
-      const jobDescription =  document.querySelector('section.core-section-container.my-3.description > div > div > section')?.innerHTML
+      const jobDescription =  document.querySelector('section.core-section-container.my-3.description > div > div > section > div')?.innerHTML
     
         
   

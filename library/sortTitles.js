@@ -1,7 +1,7 @@
 
 function sortTitles(jobListings){
     let flagWords =  [
-        'senior', 'lead', 'ruby', 'cloud', 'php', 'PHP', 
+        'senior', 'Senior', 'SENIOR', 'lead', 'ruby', 'cloud', 'php', 'PHP', 
          '.Net', '.NET', '.net', 'C#', 'C#.Net', 'Django', 
         'NET Developer', 'Golang', 'GoLang', 'GOLANG', 
         'ASP.Net', 'Ruby' 
