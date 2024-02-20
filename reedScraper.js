@@ -1,6 +1,8 @@
 const puppeteer = require('puppeteer');
 const sortTitles = require('./library/sortTitles');
 const autoScroll = require('./library/autoscroll');
+const formatDescription = require('./library/formatDescription');
+const writeCSV = require('./library/writeCSV');
 
 
 
@@ -15,7 +17,7 @@ async function scrapeReedListings(url) {
 
 
 
-await page.screenshot({path: 'reedLoadScreenshot.png'})
+// await page.screenshot({path: 'reedLoadScreenshot.png'})
 
 
 //Close the popup/iframe
@@ -39,18 +41,21 @@ await autoScroll(page);
     const listings = [];
    
     document.querySelectorAll('div.job-card_jobCard__body__86jgk ').forEach((listing) => {
-        const jobTitle = listing.querySelector('div.job-card_jobCard__body__86jgk > a').innerText
-        const companyName = listing.querySelector('a.gtmJobListingPostedBy')?.innerText;
-        const location = listing.querySelector("header > ul > li:nth-child(2)")?.innerText;
+        const rawJobTitle = listing.querySelector('div.job-card_jobCard__body__86jgk > a').innerText
+        const rawCompanyName = listing.querySelector('a.gtmJobListingPostedBy')?.innerText;
+        const rawLocation = listing.querySelector("header > ul > li:nth-child(2)")?.innerText;
         const link = listing.querySelector('div.job-card_jobCard__body__86jgk > a')?.href;
      
+        const jobTitle = rawJobTitle.replaceAll(",", " ")
+        const  companyName = rawCompanyName.replaceAll(",", " ")
+        const  location = rawLocation.replaceAll(",", " ")
    
     listings.push({ jobTitle, companyName, location, link });
     });
     return listings;
   });
 
-  console.log("Job listings here:", jobListings, "there are: ", jobListings.length, " job results");
+  console.log("there are: ", jobListings.length, " job results");
   
   const filteredJobListings = sortTitles(jobListings)
 
@@ -73,19 +78,20 @@ await autoScroll(page);
     const jobDescription= await newPage.evaluate(() => {
       // Extract data from the new page
      //  Two page formats!
+    
         const regularJobListing = document.querySelector('div.description > span')?.innerText;
         const isBrandedFormat =  document.querySelector('div.branded-job--description')?.innerText
         if (isBrandedFormat){
             return isBrandedFormat
         } else {
-            return regularJobListing
+          return regularJobListing
         }
-        
-  
       
-    });
     
-    listing.jobDescription = jobDescription
+     
+    });
+    let formattedDescription = formatDescription(jobDescription, 'reed');
+    listing.jobDescription = formattedDescription;
     await newPage.close();
   }
 
@@ -93,35 +99,11 @@ await autoScroll(page);
     
 
 
-
-// // Extract detailed Jobs
-// for (const listing of filteredJobListings) {
-//     await new Promise(resolve => setTimeout(resolve, 6000)); // 2000 milliseconds = 2 seconds
- 
-//     await page.goto(listing.link, { waitUntil: 'networkidle0' }); // 'networkidle0': consider navigation to be finished when there are no more than 0 network connections for at least 500 ms
-    
-//     await autoScroll(page);
-
-//     await page.waitForSelector('section.core-section-container.my-3.description > div > div > section', { visible: true });
-//     // Now scrape the detailed information from this listing page.
-//     const detailedJobDescription = await page.evaluate(() => {
-        
-//       // Extract details
-//       const jobDescription =  document.querySelector('section.core-section-container.my-3.description > div > div > section > div')?.innerHTML
-    
-        
-  
-//       return jobDescription;
-//     });
-  
-//     // console.log(detailedJobDescription); // Or push to an array to process later
-//     listing. JobDetails = detailedJobDescription
-//     console.log(listing)
-//   }
-//   console.log(jobDescriptions)
-
   await browser.close();
+  // writeCSV(filteredJobListings, "reed")
+  // return filteredJobListings
 }
 
 
-scrapeReedListings('https://www.reed.co.uk/jobs/work-from-home-react-developer-jobs?dateCreatedOffSet=lastthreedays');
+// scrapeReedListings('https://www.reed.co.uk/jobs/work-from-home-react-developer-jobs?dateCreatedOffSet=lastthreedays');
+// module.exports = scrapeReedListings
