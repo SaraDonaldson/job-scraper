@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const sortTitles = require('./library/sortTitles');
 const autoScroll = require('./library/autoscroll');
+const formatDescription = require('./library/formatDescription');
 
 
 
@@ -28,34 +29,44 @@ const autoScroll = require('./library/autoscroll');
 
 
 async function scrapeJobListings(url) {
+
+  //  -------- authwall ---------------
+
+const AUTHWALL_PATH = 'linkedin.com/authwall';
+const STATUS_TOO_MANY_REQUESTS = 429;
+
+
+
+function throwErrorIfAuthwall(page, nowUrl) { 
+      if (nowUrl.includes(AUTHWALL_PATH)) {
+          console.error('Authwall error');
+          throw {message: `Linkedin authwall! url: ${nowUrl}`, retry: true};
+      }
+  };
+
+//  ---------------------------------
+
+
  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
-  await page.goto(url);
-
-//   await page.click('button.show-more-less-html__button.show-more-less-button.show-more-less-html__button--more');
-
-//   const jobListing = await page.evaluate(() => {
-
-//             const listingText = document.querySelector('section.core-section-container.my-3.description > div > div > section')?.innerText
-
-//         return listingText
-
-
-//   });
-
-
-//   console.log(jobListing)
-
-//    await page.waitForSelector('div.artdeco-global-alert-action__wrapper', { visible: true });
-//   page.screenshot({path: 'screenshot.png'})
-//   await page.click('div.artdeco-global-alert-action__wrapper > button:nth-child(2)');
-//   page.screenshot({path: 'screenshotTwo.png'})
+  await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
   
-//  Extract job listings
+  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+  const followUrl = page.url();
+  await page.goto(url, { waitUntil: 'networkidle0' });
+ 
+
 page.screenshot({path: 'screenshot.png'})
   await autoScroll(page);
   
+
+    try {
+      await page.waitForSelector('#main-content > section.two-pane-serp-page__results-list > ul > li > div', { visible: true });
+    } catch (error) {
+      console.log('Current URL:', followUrl);
+      throwErrorIfAuthwall(newPage, followUrl) 
+    }
 
  const jobListings = await page.evaluate(() => {
     const listings = [];
@@ -75,33 +86,52 @@ page.screenshot({path: 'screenshot.png'})
   const filteredJobListings = sortTitles(jobListings)
 
 
+
+
 // Extract detailed Jobs
 for (const listing of filteredJobListings) {
-    await new Promise(resolve => setTimeout(resolve, 6000)); // 2000 milliseconds = 2 seconds
- 
-    await page.goto(listing.link, { waitUntil: 'networkidle0' }); // 'networkidle0': consider navigation to be finished when there are no more than 0 network connections for at least 500 ms
-    
-    await autoScroll(page);
+  const newPage = await browser.newPage();
+  await newPage.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+  
+  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+  await newPage.goto(listing.link, { waitUntil: 'networkidle0' }); // 'networkidle0': consider navigation to be finished when there are no more than 0 network connections for at least 500 ms
+  const currentUrl = newPage.url();
+  await autoScroll(page);
 
-    await page.waitForSelector('section.core-section-container.my-3.description > div > div > section', { visible: true });
-    // Now scrape the detailed information from this listing page.
-    const detailedJobDescription = await page.evaluate(() => {
-        
-      // Extract details
-      const jobDescription =  document.querySelector('section.core-section-container.my-3.description > div > div > section > div')?.innerHTML
+  try {
+    await page.waitForSelector('.core-section-container__content', { visible: true });
     
-        
+  } catch (error) {
+    console.log('Current URL:', currentUrl);
+    page.screenshot({path: `error${currentUrl}.png`})
+    throwErrorIfAuthwall(newPage, currentUrl) 
+    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+    await newPage.goto(listing.link, { waitUntil: 'networkidle0' }); 
+}
   
-      return jobDescription;
-    });
   
-    // console.log(detailedJobDescription); // Or push to an array to process later
-    listing. JobDetails = detailedJobDescription
-    console.log(listing)
-  }
+  // await page.waitForSelector('.core-section-container__content', { visible: true });
+  // Now scrape the detailed information from this listing page.
+  const detailedJobDescription = await page.evaluate(() => {
+    // Extract details
+    return  document.querySelector('.core-section-container__content')?.innerHTML      
+  });
+
+  let formattedDescription = formatDescription(detailedJobDescription, 'linkedIn');
+  
+  listing.jobDescription = formattedDescription;
+  // return jobDescription;
+
+  // console.log(detailedJobDescription); // Or push to an array to process later
+  // listing.JobDetails = detailedJobDescription
+  console.log(listing)
+  await newPage.close();
+}
+
 //   console.log(jobDescriptions)
 
   await browser.close();
+  // return 
 }
 
 // scrapeJobListings('https://www.linkedin.com/jobs/search/?f_E=2&f_TPR=r86400&f_WT=2&keywords=react%20developer&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true'); 

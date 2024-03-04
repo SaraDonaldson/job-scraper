@@ -45,6 +45,12 @@ breakTriggers = ['Apply', 'Similar to your searches', 'ADDED today ', 'Today', '
                   }
                }
          }
+
+            // if(source === 'linkedIn'){
+            //    let parentDiv = ''
+            //    // look for parent div and chop all off before the end of that div
+            //    // find closing marker and chop off all before
+            // }
             let removeCommas = line.replaceAll(',', ' ')
             let removeSemiColons = removeCommas.replaceAll(";", ":")
             let removeQuotes = removeSemiColons.replaceAll('"', "")

@@ -4,7 +4,8 @@ function sortTitles(jobListings){
         'senior', 'Senior', 'SENIOR', 'lead', 'Lead', 'ruby', 'cloud', 'php', 'PHP', 
          '.Net', '.NET', '.net', 'C#', 'C#.Net', 'Django', 
         'NET Developer', 'Golang', 'GoLang', 'GOLANG', 
-        'ASP.Net', 'Ruby', 'Java Developer', 'manager', 'Manager', 'python', 'Python'
+        'ASP.Net', 'Ruby', 'Java Developer', 'manager', 'Manager', 'python', 'Python', 'laravel',
+        'Laravel',
     ]
 
 const removedListings =[];
