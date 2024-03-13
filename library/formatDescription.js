@@ -13,11 +13,14 @@ breakTriggers = ['Apply', 'Similar to your searches', 'ADDED today ', 'Today', '
                   'These jobs were popular with other job seekers', 'Activate one-click apply. What is one-click apply?',
                   'Create alert', 'Create alert	', 'Similar to your searches', 'Email address: ', 'Previous', 'Next']
    
-   let descriptionArray = jobDescription.split('\n')
-   
+  
+   let descriptionArray =  jobDescription.split('\n')
+
+ 
    let reformattedArray =[]
    let count = 0;
    let breakAfterPoint = descriptionArray.length / 3;
+ 
 
      reformat: for(line of descriptionArray){
             removedSpaces = line.trimStart()
@@ -46,11 +49,7 @@ breakTriggers = ['Apply', 'Similar to your searches', 'ADDED today ', 'Today', '
                }
          }
 
-            // if(source === 'linkedIn'){
-            //    let parentDiv = ''
-            //    // look for parent div and chop all off before the end of that div
-            //    // find closing marker and chop off all before
-            // }
+              
             let removeCommas = line.replaceAll(',', ' ')
             let removeSemiColons = removeCommas.replaceAll(";", ":")
             let removeQuotes = removeSemiColons.replaceAll('"', "")
