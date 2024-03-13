@@ -1,16 +1,18 @@
 const fs = require('fs');
 
-function writeCSV(jobData, fileName){
+function writeCSV(jobData){
   
-
+let today = Date.now()
+fileName = "jobs"+ today;
 // Column headers
-const headers = 'jobTitle;companyName;location;link;\n';
+const headers = 'id;jobTitle;companyName;location;jobDescription;link;\n';
 
 // data rows
 const rows = []
+// create unique ids for each  job
 
 jobData.forEach((jobListing) => {
-   rows.push(`'"${jobListing.jobTitle}" ; "${jobListing.companyName}" ; "${jobListing.location}" ; ${jobListing.link} ;'`)
+   rows.push(`"${jobListing.id}" ; "${jobListing.jobTitle}" ; "${jobListing.companyName}" ; "${jobListing.jobDescription}"; "${jobListing.location}" ; "${jobListing.link}" ;`)
 })
 // console.log("ROWS: ", rows)
 // Combine headers and rows. Each row is a new line.
@@ -21,6 +23,7 @@ path = `/Users/saradonaldson/dropbox/ZapierIntegrations/jobLists/${fileName}.csv
 fs.writeFileSync(path, csvContent);
 
 }
+
 
 
 
