@@ -41,16 +41,14 @@ await autoScroll(page);
     const listings = [];
    
     document.querySelectorAll('div.job-card_jobCard__body__86jgk ').forEach((listing) => {
-        const rawJobTitle = listing.querySelector('div.job-card_jobCard__body__86jgk > a').innerText
-        const rawCompanyName = listing.querySelector('a.gtmJobListingPostedBy')?.innerText;
-        const rawLocation = listing.querySelector("header > ul > li:nth-child(2)")?.innerText;
+        const jobTitle = listing.querySelector('div.job-card_jobCard__body__86jgk > a').innerText
+        const companyName = listing.querySelector('a.gtmJobListingPostedBy')?.innerText;
+        const location = listing.querySelector("header > ul > li:nth-child(2)")?.innerText;
         const link = listing.querySelector('div.job-card_jobCard__body__86jgk > a')?.href;
-     
-        const jobTitle = rawJobTitle.replaceAll(",", " ")
-        const  companyName = rawCompanyName.replaceAll(",", " ")
-        const  location = rawLocation.replaceAll(",", " ")
+        const linkSplit = link.split('/')[5]
+        const id = linkSplit.split('?')[0]
    
-    listings.push({ jobTitle, companyName, location, link });
+    listings.push({ id, jobTitle, companyName, location, link });
     });
     return listings;
   });
@@ -101,9 +99,9 @@ await autoScroll(page);
 
   await browser.close();
   // writeCSV(filteredJobListings, "reed")
-  // return filteredJobListings
+  return filteredJobListings
 }
 
 
 // scrapeReedListings('https://www.reed.co.uk/jobs/work-from-home-react-developer-jobs?dateCreatedOffSet=lastthreedays');
-// module.exports = scrapeReedListings
+module.exports = scrapeReedListings
