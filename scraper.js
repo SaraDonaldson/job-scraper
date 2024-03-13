@@ -19,7 +19,7 @@ function throwErrorIfAuthwall(page, nowUrl) {
       if (nowUrl.includes(AUTHWALL_PATH)) {
           console.error('Authwall error');
           console.log('Authwall error, at: ' , nowUrl)
-          // throw {message: `Linkedin authwall! url: ${nowUrl}`, retry: true};
+          throw {message: `Linkedin authwall! url: ${nowUrl}`, retry: true};
       }
   };
 
@@ -27,7 +27,7 @@ function throwErrorIfChromeError(page, nowUrl) {
     if (nowUrl.includes(CHROME_ERROR_PATH)) {
         console.error('Chrome error');
         console.log('Chrome error, at: ' , nowUrl)
-        // throw {message: `Chrome error at url: ${nowUrl}`, retry: true};
+        throw {message: `Chrome error at url: ${nowUrl}`, retry: true};
         
     }
 };
@@ -39,37 +39,52 @@ function throwErrorIfChromeError(page, nowUrl) {
 
   await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Safari/537.36');
   
-  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
 
-  await page.goto(url, { waitUntil: 'networkidle0' });
-  const followUrl = page.url();
-
-  page.screenshot({path: 'screenshot.png'})
-  console.log('URL after "go to":', followUrl);
-
-  await autoScroll(page);
 
 /*----------  Load Linked in Search page Successfully */
   const maxAttempts = 4
- loadSearchPage: for (let count = 0; count < maxAttempts; count++) {
+ loadSearchPage: for (let count = 1; count < maxAttempts; count++) {
     if( count === maxAttempts){
       console.log("Error: max attempts reached in accessing Linkedin search")
       linkedinErrLog.push({loadSearchFailure: "unsuccessful with max attempts"})
       return [];
     }
     try {
-     let searchPageSuccess = await page.waitForSelector('#main-content > section.two-pane-serp-page__results-list > ul > li > div', { visible: true });
-     if (searchPageSuccess){
-        linkedinErrLog.push({loadSearch: `successful on ${count+1} attempts`})
-        console.log(`Search page  load successful on ${count+1} attempts`)
+
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+
+      await page.goto(url, { waitUntil: 'networkidle0' });
+      
+      page.screenshot({path: 'screenshot.png'})
+      // console.log('URL after "go to":', page.url());
+      
+      throwErrorIfAuthwall(page, page.url()); 
+      throwErrorIfChromeError(page, page.url());
+
+      await autoScroll(page);
+
+      if(url === page.url()){
+        console.log("url successful, no authwall or chrome error")
+      }
+      const searchPageSuccess = [];
+       await page.waitForSelector('#main-content > section.two-pane-serp-page__results-list > ul > li > div').then( linkedinErrLog.push({loadSearch: `successful on ${count} attempts`}),  
+       searchPageSuccess.push(true)
+      );
+    
+    
+     if (searchPageSuccess[0]){
+        console.log("Search Page Load successful? : ", searchPageSuccess[0])
+        console.log(`Search page  load successful on ${count} attempts`)
         break loadSearchPage
       }
+
+     
+
     } catch (error) {
-      console.log('Current URL:', followUrl);
-      throwErrorIfAuthwall(page, followUrl) 
-      throwErrorIfChromeError(page, followUrl) 
-      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
-      await page.goto(url, { waitUntil: 'networkidle0' });
+      console.log('Current URL:', page.url());
+    
+      // await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+      // await page.goto(url, { waitUntil: 'networkidle0' });
     }
   }
 
@@ -103,18 +118,15 @@ function throwErrorIfChromeError(page, nowUrl) {
 /* -----------------------------------------------------------------*/
 /* -----------------------------------------------------------------*/
 // Extract detailed Jobs
-let listingsCount= 1;
+let listingsCount= 0;
 
 
 getJobDescriptions: for (const listing of filteredJobListings) {
-
+  listingsCount++;
   const newPage = await browser.newPage();
   await newPage.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Safari/537.36');
   
-  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
-  await newPage.goto(listing.link, { waitUntil: 'networkidle0' }); // 'networkidle0': consider navigation to be finished when there are no more than 0 network connections for at least 500 ms
-  const currentUrl = newPage.url();
-  await autoScroll(newPage);
+
 
 
 
@@ -124,51 +136,58 @@ getJobDescriptions: for (const listing of filteredJobListings) {
       console.log("Error: max attempts reached in accessing Linkedin job link page")
       continue getJobDescriptions;
     }
+
     console.log("Getting link ", listingsCount, " of ", filteredJobListings.length, " attempt: ", count+1);
+    
     try {
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+      await newPage.goto(listing.link, { waitUntil: 'networkidle0' }); // 'networkidle0': consider navigation to be finished when there are no more than 0 network connections for at least 500 ms
+      const currentUrl = newPage.url();
+      await autoScroll(newPage);
 
+      if(url === page.url()){
+        console.log("url successful, no authwall or chrome error")
+      } else{
+        if(newPage.url().includes(AUTHWALL_PATH)) {
+          linkedinErrLog.push([`Page link ${listingsCount} Authwall Error: `, `Attempt ${count} accessing Linkedin job link page :`, `${listing.link}`])
+          throwErrorIfAuthwall(page, nowUrl);
+          console.error('Authwall error');
+          page.screenshot({path: `errLIAuthWL${listingsCount}A${listingsCount}.png`});
+          await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+          continue pageLoad 
+        }
+        if(currentUrl.includes(CHROME_ERROR_PATH)){
+          throwErrorIfChromeError(newPage, currentUrl) 
+          page.screenshot({path: `errLIChromeL${listingsCount}A${listingsCount}.png`});
+          linkedinErrLog.push([`Page link ${listingsCount} Chrome Error: `, `Attempt ${count} accessing Linkedin job link page :`, `${listing.link}`])
+          console.error('Chrome error');
+          await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
+          continue pageLoad 
+          }
+      }
+
+      // const loadMain = [];
+      // const loadSection = []
+      const loadDetails = []
+      const loadJobPageSuccess = []
       await page.waitForSelector('#main-content', { visible: true });
-      await page.waitForSelector('#main-content > section', { visible: true }); 
-      let jobLinkPageSucces= await page.waitForSelector('.core-section-container__content', { visible: true });
- 
+      // console.log("--- load main status: ", loadMain[0]);
+      await page.waitForSelector('#main-content > section', { visible: true });
+      // console.log( "---- load Section status: ", loadSection[0]);
+      await page.waitForSelector('section > div').then(loadDetails.push(true));
+      console.log("----- load Details status: ", loadDetails[0]);
+      await page.waitForSelector('.core-section-container__content').then(loadJobPageSuccess.push(true));
+      console.log("------ load content status: ", loadJobPageSuccess[0]);
 
-     if (jobLinkPageSuccess == "CdpElementHandle {handle: CdpJSHandle {},[Symbol(_isElementHandle)]: true}"){
+      if (loadJobPageSuccess[0]){
         console.log("Job page load success: Listing ", listingsCount, " of ", filteredJobListings.length)
         break pageLoad;
       }
-
-      if(currentUrl.includes(AUTHWALL_PATH)) {
-        linkedinErrLog.push([`Page link ${listingsCount} Authwall Error: `, `Attempt ${count} accessing Linkedin job link page :`, `${listing.link}`])
-        throwErrorIfAuthwall(page, nowUrl);
-        console.error('Authwall error');
-        page.screenshot({path: `errLIAuthWL${listingsCount}A${listingsCount}.png`});
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
-        continue pageLoad 
-      }
-      if(currentUrl.includes(CHROME_ERROR_PATH)){
-      throwErrorIfChromeError(newPage, currentUrl) 
-       page.screenshot({path: `errLIChromeL${listingsCount}A${listingsCount}.png`});
-       linkedinErrLog.push([`Page link ${listingsCount} Chrome Error: `, `Attempt ${count} accessing Linkedin job link page :`, `${listing.link}`])
-       console.error('Chrome error');
-       await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
-       continue pageLoad 
-      }
+      
+    
     } catch (error) {
       console.log('Error on linked in job page. URL:', newPage.url(), "ERR: ", error);
       page.screenshot({path: `liJobPageError.png`})
-    // if(currentUrl.includes(AUTHWALL_PATH)) {
-    //   linkedinErrLog.push([`Page link ${listingsCount} Authwall Error: `, `Attempt ${count} accessing Linkedin job link page :`, `${listing.link}`])
-    //   throwErrorIfAuthwall(page, nowUrl);
-    //   console.error('Authwall error');
-    //   await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
-    // }
-    // if(currentUrl.includes(CHROME_ERROR_PATH)){
-    // throwErrorIfChromeError(newPage, currentUrl) 
-    //  page.screenshot({path: `liChromeError.png`});
-    //  linkedinErrLog.push([`Page link ${listingsCount} Chrome Error: `, `Attempt ${count} accessing Linkedin job link page :`, `${listing.link}`])
-    //  console.error('Chrome error');
-    //  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 5000)); 
-    // }
     continue pageLoad 
     
   }
