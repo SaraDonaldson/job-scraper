@@ -58,7 +58,7 @@ await page.waitForSelector('div.res-130ff2y > div > h1 > span.res-vurnku', { vis
 
  console.log("there are ", resultsNumber, " results, ", resultsPages, " pages.  Pagination is: ", pagination);
 
- const allJobListings= []
+ const allJobListings= [];
 
 
  if(pagination){
@@ -77,23 +77,27 @@ await page.waitForSelector('div.res-130ff2y > div > h1 > span.res-vurnku', { vis
             const rawCompanyName = listing.querySelector('article.res-vxbpca > div > div > div.res-1r68twq')?.innerText;
             const rawLocation = listing.querySelector('article.res-vxbpca > div > div > div.res-qchjmw')?.innerText;
             const link = listing.querySelector('article.res-vxbpca > div > h2 > a')?.href;    
-            const extractUrl = link.split('/')[5]
-            const id = extractUrl.split("-")[this.length].replace("job", '')
-           //  remove commas
+            const extractUrl = link.split('-job')
+            const id = extractUrl[1]
+           
+
+            console.log("id:",id);
+        
            const jobTitle = rawJobTitle.replaceAll(",", " ")
            const  companyName = rawCompanyName.replaceAll(",", " ")
            const  location = rawLocation.replaceAll(",", " ")
-
+        
+      console.log( id, jobTitle, companyName, location, link )
        listings.push({ id, jobTitle, companyName, location, link });
-       console.log({ id, jobTitle, companyName, location, link })
+       
       
         });
- 
+      
         return listings;
       });
       console.log("reading listings from page: ", i+1, " of ", resultsPages)
         allJobListings.push(paginatedListings)
-        
+       await console.log(paginatedListings)
        
     // Navigate Pagination unless last page
           if(i != lastPage){
@@ -114,7 +118,7 @@ await page.waitForSelector('div.res-130ff2y > div > h1 > span.res-vurnku', { vis
             let lastItem = await page.evaluate(() => { 
             let list = document.querySelectorAll('div.results-container > div.job-results-row > div.stst-rlr > div > div > div > div > div > nav > ul > li').length
             return list})
-            console.log(lastItem)
+            // console.log(lastItem)
             let nextPageSelector = 'div.results-container > div.job-results-row > div.stst-rlr > div > div > div > div > div > nav > ul > li:nth-child' + `(${lastItem})`
             await page.click(nextPageSelector);
             
@@ -210,6 +214,7 @@ await page.waitForSelector('div.res-130ff2y > div > h1 > span.res-vurnku', { vis
     let formattedDescription = formatDescription(jobDescription, 'totalJobs');
     
     listing.jobDescription = formattedDescription;
+
     await newPage.close();
   }
 

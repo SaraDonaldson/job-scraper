@@ -70,15 +70,9 @@ function throwErrorIfChromeError(page, nowUrl) {
        await page.waitForSelector('#main-content > section.two-pane-serp-page__results-list > ul > li > div').then( linkedinErrLog.push({loadSearch: `successful on ${count} attempts`}),  
        searchPageSuccess.push(true)
       );
-    
-    
-     if (searchPageSuccess[0]){
-        console.log("Search Page Load successful? : ", searchPageSuccess[0])
-        console.log(`Search page  load successful on ${count} attempts`)
-        break loadSearchPage
-      }
-
-     
+      await console.log("Search Page Load successful? : ", searchPageSuccess[0])
+      await console.log(`Search page  load successful on ${count} attempts`)
+      break loadSearchPage
 
     } catch (error) {
       console.log('Current URL:', page.url());
