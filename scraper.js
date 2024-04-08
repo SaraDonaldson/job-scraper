@@ -139,7 +139,7 @@ getJobDescriptions: for (const listing of filteredJobListings) {
       const currentUrl = newPage.url();
       await autoScroll(newPage);
 
-      if(url === page.url()){
+      if(url === newPage.url()){
         console.log("url successful, no authwall or chrome error")
       } else{
         if(newPage.url().includes(AUTHWALL_PATH)) {
@@ -164,13 +164,13 @@ getJobDescriptions: for (const listing of filteredJobListings) {
       // const loadSection = []
       const loadDetails = []
       const loadJobPageSuccess = []
-      await page.waitForSelector('#main-content', { visible: true });
+      await newPage.waitForSelector('#main-content', { visible: true });
       // console.log("--- load main status: ", loadMain[0]);
-      await page.waitForSelector('#main-content > section', { visible: true });
+      await newPage.waitForSelector('#main-content > section', { visible: true });
       // console.log( "---- load Section status: ", loadSection[0]);
-      await page.waitForSelector('section > div').then(loadDetails.push(true));
+      await newPage.waitForSelector('section > div').then(loadDetails.push(true));
       console.log("----- load Details status: ", loadDetails[0]);
-      await page.waitForSelector('.core-section-container__content').then(loadJobPageSuccess.push(true));
+      await newPage.waitForSelector('.core-section-container__content').then(loadJobPageSuccess.push(true));
       console.log("------ load content status: ", loadJobPageSuccess[0]);
 
       if (loadJobPageSuccess[0]){
@@ -181,7 +181,7 @@ getJobDescriptions: for (const listing of filteredJobListings) {
     
     } catch (error) {
       console.log('Error on linked in job page. URL:', newPage.url(), "ERR: ", error);
-      page.screenshot({path: `liJobPageError.png`})
+      newPage.screenshot({path: `liJobPageError.png`})
     continue pageLoad 
     
   }
@@ -189,7 +189,7 @@ getJobDescriptions: for (const listing of filteredJobListings) {
 
 
   // Scrape the detailed information from this listing page
-  const detailedJobDescription = await page.evaluate(() => {
+  const detailedJobDescription = await newPage.evaluate(() => {
     return  document.querySelector('.core-section-container__content')?.innerHTML      
   });
 
