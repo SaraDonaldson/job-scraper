@@ -158,10 +158,10 @@ await page.waitForSelector('div.res-130ff2y > div > h1 > span.res-vurnku', { vis
            const rawCompanyName = listing.querySelector('article.res-vxbpca > div > div > div.res-1r68twq')?.innerText;
            const rawLocation = listing.querySelector('article.res-vxbpca > div > div > div.res-qchjmw')?.innerText;
            const link = listing.querySelector('article.res-vxbpca > div > h2 > a')?.href;
-           const extractUrl = link.split('/')[5]
-           const id = extractUrl.split("-")[this.length].replace("job", '')
-
+           const extractUrl = link.split('/')[5].split("-")
+           const idSection = extractUrl.length
           //  remove commas
+          const id = extractUrl[idSection-1].replace("job", "")
           const jobTitle = rawJobTitle.replaceAll(",", " ")
           const  companyName = rawCompanyName.replaceAll(",", " ")
           const  location = rawLocation.replaceAll(",", " ")
