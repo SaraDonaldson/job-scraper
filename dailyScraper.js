@@ -22,10 +22,10 @@ async function dailyScraper(){
  
         let linkedInResultsJavaScript = await scrapeJobListings('https://www.linkedin.com/jobs/search?keywords=Javascript%20Developer&location=United%20Kingdom&geoId=101165590&f_TPR=r86400&f_WT=2&f_E=2&position=1&pageNum=0');
         allResults.push(linkedInResultsJavaScript)   
-
-
-
-   
+     
+     
+ 
+     
     let flatResults = allResults.flat();
     writeCSV(flatResults);
    
