@@ -88,8 +88,24 @@ await autoScroll(page);
     
      
     });
-    let formattedDescription = formatDescription(jobDescription, 'reed');
-    listing.jobDescription = formattedDescription;
+    try {
+      if(jobDescription.length <= 1){
+      let formattedDescription = formatDescription(jobDescription, 'reed');
+      listing.jobDescription = formattedDescription;
+      }
+      else{
+        listing.jobDescription = "could not access job description"
+      }
+    } catch (error) {
+      console.error(`could not access job description on Reed result at url:  ${link}`)
+      if(jobDescription.length <= 1){
+       
+        listing.jobDescription = jobDescription;
+        }
+      listing.jobDescription = "could not access job description"
+    }
+    
+   
     await newPage.close();
   }
 
